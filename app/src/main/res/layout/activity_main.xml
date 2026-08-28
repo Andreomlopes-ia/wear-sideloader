@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/status_disconnected"
+            android:textAppearance="?attr/textAppearanceSubtitle1" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/step_prepare" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/prepare_instructions"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/step_pair" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:hint="@string/hint_pair_host">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pairHost"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:hint="@string/hint_pair_port">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pairPort"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:hint="@string/hint_pair_code">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/pairCode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pairButton"
+                    style="@style/Action"
+                    android:text="@string/action_pair" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/step_connect" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:hint="@string/hint_connect_host">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/connectHost"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:hint="@string/hint_connect_port">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/connectPort"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/connectButton"
+                    style="@style/Action"
+                    android:text="@string/action_connect" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/autoConnectButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_auto_connect" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/disconnectButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_disconnect" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/step_install" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/apkLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:text="@string/no_apk_selected"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/chooseApkButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_choose_apk" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/installButton"
+                    style="@style/Action"
+                    android:text="@string/action_install" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/listPackagesButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_list_packages" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Field"
+                    android:layout_marginTop="12dp"
+                    android:hint="@string/hint_uninstall_package">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/uninstallPackage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/uninstallButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_uninstall" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_log" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/logView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textIsSelectable="true" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/clearLogButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_clear_log" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:indeterminate="true"
+            android:visibility="invisible" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
