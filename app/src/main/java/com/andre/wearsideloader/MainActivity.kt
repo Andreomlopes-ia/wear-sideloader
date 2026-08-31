@@ -53,9 +53,12 @@ class MainActivity : AppCompatActivity() {
         binding.clearLogButton.setOnClickListener { viewModel.clearLog() }
 
         viewModel.state.observe(this) { render(it) }
-        viewModel.log.observe(this) {
-            binding.logView.text = it
-            binding.root.post { binding.root.fullScroll(View.FOCUS_DOWN) }
+        viewModel.log.observe(this) { text ->
+            binding.logView.text = text
+            if (text.isEmpty()) return@observe
+            // scrollTo rather than fullScroll: the latter moves focus, which makes the outer
+            // NestedScrollView jump the log into view.
+            binding.logScroll.post { binding.logScroll.scrollTo(0, binding.logView.bottom) }
         }
         viewModel.apkLabel.observe(this) {
             binding.apkLabel.text = it ?: getString(R.string.no_apk_selected)

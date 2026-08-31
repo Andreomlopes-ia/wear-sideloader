@@ -37,6 +37,27 @@ Requirements and gotchas:
 - A watch reboot drops the connection and usually requires re-pairing.
 - Installs pass `-r -t`; `-t` avoids `INSTALL_FAILED_TEST_ONLY` on debug-built APKs.
 
+## Verification status
+
+Tested on an API 30 x86 emulator by driving the UI over `adb`:
+
+- **Verified**: app launches, layout renders, state machine enables/disables the right controls,
+  IP and port persist across restarts, and `connect()` completes a real ADB handshake
+  (`adbd: authentication not required` in logcat) reaching the CONNECTED state.
+- **Verified**: the watchdog reports a clear timeout and restores the UI instead of freezing.
+- **Not verified**: `shell:` and the streaming install. See below.
+
+The emulator cannot validate those paths. Its `adbd` speaks only over the qemu pipe — `adb tcpip`
+does not produce a guest TCP listener — so the only reachable endpoint is the emulator's host-side
+transport port (`10.0.2.2:5555` from inside the guest). That endpoint completes CNXN/AUTH but does
+not carry stream traffic for a second client: `shell:` opens and then returns nothing. With the host
+`adb` server killed to remove contention the handshake still succeeds and streams still stall, so
+this is an emulator-transport limitation rather than evidence either way about the app.
+
+**Installing onto a real watch is therefore still untested.** First run against real hardware should
+tap "List installed apps" immediately after connecting — the cheapest proof the stream path works
+before trusting the install.
+
 ## Building
 
 ```sh

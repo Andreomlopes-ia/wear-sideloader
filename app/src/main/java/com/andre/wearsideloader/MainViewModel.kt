@@ -9,12 +9,16 @@ import androidx.lifecycle.MutableLiveData
 import io.github.muntashirakon.adb.AdbAuthenticationFailedException
 import io.github.muntashirakon.adb.AdbPairingRequiredException
 import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     enum class State { DISCONNECTED, BUSY, CONNECTED }
 
     private val executor = Executors.newSingleThreadExecutor()
+    private val watchdog = Executors.newSingleThreadScheduledExecutor()
     private val prefs = app.getSharedPreferences("sideloader", Application.MODE_PRIVATE)
     private val transcript = StringBuilder()
 
@@ -50,7 +54,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun connect(host: String, port: Int) = runAdb("Connecting to $host:$port") { manager ->
         if (manager.connect(host, port)) {
             prefs.edit().putString(KEY_HOST, host).putString(KEY_PORT, port.toString()).apply()
-            append("Connected to ${AdbInstaller.deviceDescription(manager)}")
+            announceConnected(manager)
             true
         } else {
             append("Connection refused. Confirm Wireless debugging is still on and the port is current.")
@@ -60,7 +64,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun autoConnect() = runAdb("Searching the network for a paired device") { manager ->
         if (manager.autoConnect(getApplication(), DISCOVERY_TIMEOUT_MS)) {
-            append("Connected to ${AdbInstaller.deviceDescription(manager)}")
+            announceConnected(manager)
             true
         } else {
             append("No device found. Enter the IP and port manually.")
@@ -74,7 +78,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             append("Choose an APK first.")
             return
         }
-        runAdb("Installing ${displayName(uri)}") { manager ->
+        runAdb("Installing ${displayName(uri)}", INSTALL_TIMEOUT_SECONDS) { manager ->
             val size = byteSize(uri)
             if (size <= 0) {
                 append("Could not determine the APK size, so it cannot be streamed.")
@@ -120,19 +124,38 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     override fun onCleared() {
         super.onCleared()
         executor.shutdownNow()
+        watchdog.shutdownNow()
+    }
+
+    /** A getprop hiccup must not make an otherwise good connection look like a failure. */
+    private fun announceConnected(manager: AdbManager) {
+        val description = runCatching { AdbInstaller.deviceDescription(manager) }
+            .getOrElse { "device (details unavailable: ${it.javaClass.simpleName})" }
+        append("Connected to $description")
     }
 
     /**
      * Runs [block] on the ADB thread. The block reports whether the connection is live afterwards,
      * which becomes the new UI state.
+     *
+     * Every call is bounded by a watchdog. A watch that sleeps or drops off Wi-Fi mid-stream leaves
+     * the ADB reader blocked forever with no error, so without this the UI would stick on "Working…"
+     * with every control disabled and no way out.
      */
-    private fun runAdb(description: String, block: (AdbManager) -> Boolean) {
+    private fun runAdb(
+        description: String,
+        timeoutSeconds: Long = DEFAULT_TIMEOUT_SECONDS,
+        block: (AdbManager) -> Boolean
+    ) {
         _state.postValue(State.BUSY)
-        append("$description...")
-        executor.execute {
+        append("$description…")
+        val settled = AtomicBoolean(false)
+
+        val task = FutureTask {
             val connected = try {
-                val manager = AdbManager.getInstance(getApplication())
-                block(manager)
+                block(AdbManager.getInstance(getApplication()))
+            } catch (e: InterruptedException) {
+                false // cancelled by the watchdog, which reports it
             } catch (e: AdbPairingRequiredException) {
                 append("This watch requires pairing first. Use the Pair step above.")
                 false
@@ -143,8 +166,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 append("Error: ${e.javaClass.simpleName}: ${e.message ?: "no detail"}")
                 false
             }
-            _state.postValue(if (connected) State.CONNECTED else State.DISCONNECTED)
+            if (settled.compareAndSet(false, true)) {
+                _state.postValue(if (connected) State.CONNECTED else State.DISCONNECTED)
+            }
+            connected
         }
+
+        executor.execute(task)
+
+        watchdog.schedule({
+            if (settled.compareAndSet(false, true)) {
+                append("Timed out after ${timeoutSeconds}s with no response. The watch may have gone to sleep, dropped off Wi-Fi, or turned Wireless debugging off.")
+                task.cancel(true)
+                // Closing the socket also unblocks the reader still parked on it.
+                runCatching { AdbManager.getInstance(getApplication()).disconnect() }
+                _state.postValue(State.DISCONNECTED)
+            }
+        }, timeoutSeconds, TimeUnit.SECONDS)
     }
 
     private fun append(line: String) {
@@ -172,5 +210,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private const val KEY_HOST = "host"
         private const val KEY_PORT = "port"
         private const val DISCOVERY_TIMEOUT_MS = 10_000L
+        private const val DEFAULT_TIMEOUT_SECONDS = 30L
+        // Streaming a large APK to a watch over Wi-Fi is legitimately slow.
+        private const val INSTALL_TIMEOUT_SECONDS = 600L
     }
 }

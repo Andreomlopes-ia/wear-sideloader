@@ -54,10 +54,15 @@ object AdbInstaller {
             .sorted()
             .toList()
 
+    /** One round trip rather than three — every extra stream is another chance to stall. */
     fun deviceDescription(manager: AbsAdbConnectionManager): String {
-        val model = shell(manager, "getprop ro.product.model")
-        val release = shell(manager, "getprop ro.build.version.release")
-        val sdk = shell(manager, "getprop ro.build.version.sdk")
+        val props = shell(
+            manager,
+            "getprop ro.product.model; getprop ro.build.version.release; getprop ro.build.version.sdk"
+        ).lines().map { it.trim() }
+        val model = props.getOrNull(0).orEmpty().ifEmpty { "unknown device" }
+        val release = props.getOrNull(1).orEmpty().ifEmpty { "?" }
+        val sdk = props.getOrNull(2).orEmpty().ifEmpty { "?" }
         return "$model (Android $release, API $sdk)"
     }
 

@@ -5,9 +5,12 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
+    <!-- focusableInTouchMode stops the selectable log TextView from stealing focus on launch,
+         which would open the screen scrolled to the bottom. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:focusableInTouchMode="true"
         android:orientation="vertical"
         android:padding="16dp">
 
@@ -193,13 +196,20 @@
                     style="@style/SectionTitle"
                     android:text="@string/section_log" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/logView"
+                <ScrollView
+                    android:id="@+id/logScroll"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textIsSelectable="true" />
+                    android:layout_height="200dp"
+                    android:fillViewport="true">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/logView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textIsSelectable="true" />
+                </ScrollView>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/clearLogButton"
