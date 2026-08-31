@@ -1,0 +1,7 @@
+<resources>
+    <!-- The light-theme blue sits at ~2.4:1 on dark surfaces. Dark themes need a light primary
+         with a dark on-primary, which keeps both filled and outlined buttons readable. -->
+    <color name="primary">#7FC7F0</color>
+    <color name="primary_variant">#0A3D5C</color>
+    <color name="on_primary">#00293F</color>
+</resources>
