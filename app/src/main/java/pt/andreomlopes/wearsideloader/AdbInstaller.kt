@@ -1,4 +1,4 @@
-package com.andre.wearsideloader
+package pt.andreomlopes.wearsideloader
 
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
 import java.io.InputStream

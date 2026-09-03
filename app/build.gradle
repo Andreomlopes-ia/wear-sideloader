@@ -4,15 +4,15 @@ plugins {
 }
 
 android {
-    namespace 'com.andre.wearsideloader'
+    namespace 'pt.andreomlopes.wearsideloader'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.andre.wearsideloader"
+        applicationId "pt.andreomlopes.wearsideloader"
         minSdk 24
         targetSdk 33
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "0.1.1"
     }
 
     buildTypes {

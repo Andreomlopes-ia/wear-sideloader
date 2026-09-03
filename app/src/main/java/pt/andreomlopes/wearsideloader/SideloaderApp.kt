@@ -1,4 +1,4 @@
-package com.andre.wearsideloader
+package pt.andreomlopes.wearsideloader
 
 import android.app.Application
 import org.conscrypt.Conscrypt

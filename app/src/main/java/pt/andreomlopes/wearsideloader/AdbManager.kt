@@ -1,4 +1,4 @@
-package com.andre.wearsideloader
+package pt.andreomlopes.wearsideloader
 
 import android.content.Context
 import android.os.Build

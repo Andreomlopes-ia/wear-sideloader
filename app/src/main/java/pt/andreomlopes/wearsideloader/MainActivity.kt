@@ -1,4 +1,4 @@
-package com.andre.wearsideloader
+package pt.andreomlopes.wearsideloader
 
 import android.os.Bundle
 import android.view.View
@@ -6,7 +6,7 @@ import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.andre.wearsideloader.databinding.ActivityMainBinding
+import pt.andreomlopes.wearsideloader.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
