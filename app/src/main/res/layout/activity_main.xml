@@ -22,6 +22,8 @@
             android:text="@string/status_disconnected"
             android:textAppearance="?attr/textAppearanceSubtitle1" />
 
+        <!-- Watch: one shared IP field for both pairing and connecting, plus pairing tucked
+             behind a disclosure toggle since it is only needed once per watch. -->
         <com.google.android.material.card.MaterialCardView
             style="@style/SectionCard">
 
@@ -29,80 +31,28 @@
 
                 <com.google.android.material.textview.MaterialTextView
                     style="@style/SectionTitle"
-                    android:text="@string/step_prepare" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/prepare_instructions"
-                    android:textAppearance="?attr/textAppearanceBody2" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/SectionCard">
-
-            <LinearLayout style="@style/SectionBody">
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/SectionTitle"
-                    android:text="@string/step_pair" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Field"
-                    android:hint="@string/hint_pair_host">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/pairHost"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Field"
-                    android:hint="@string/hint_pair_port">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/pairPort"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Field"
-                    android:hint="@string/hint_pair_code">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/pairCode"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    android:text="@string/card_watch_title" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/pairButton"
-                    style="@style/Action"
-                    android:text="@string/action_pair" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/SectionCard">
-
-            <LinearLayout style="@style/SectionBody">
+                    android:id="@+id/setupHelpToggle"
+                    style="@style/ToggleText"
+                    android:text="@string/action_setup_help" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    style="@style/SectionTitle"
-                    android:text="@string/step_connect" />
+                    android:id="@+id/setupHelpBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:text="@string/prepare_instructions"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:visibility="gone" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Field"
-                    android:hint="@string/hint_connect_host">
+                    android:hint="@string/hint_watch_host">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/connectHost"
+                        android:id="@+id/watchHost"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text" />
@@ -133,9 +83,51 @@
                     android:id="@+id/disconnectButton"
                     style="@style/ActionOutlined"
                     android:text="@string/action_disconnect" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pairingToggle"
+                    style="@style/ToggleText"
+                    android:text="@string/action_pairing_toggle" />
+
+                <LinearLayout
+                    android:id="@+id/pairingGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Field"
+                        android:hint="@string/hint_pair_port">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pairPort"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Field"
+                        android:hint="@string/hint_pair_code">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pairCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/pairButton"
+                        style="@style/Action"
+                        android:text="@string/action_pair" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Install: the primary action. Enabled as soon as an APK is chosen — it reconnects on
+             its own if the link is down, rather than staying disabled with no explanation. -->
         <com.google.android.material.card.MaterialCardView
             style="@style/SectionCard">
 
@@ -143,7 +135,7 @@
 
                 <com.google.android.material.textview.MaterialTextView
                     style="@style/SectionTitle"
-                    android:text="@string/step_install" />
+                    android:text="@string/card_install_title" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/apkLabel"
@@ -158,32 +150,58 @@
                     style="@style/ActionOutlined"
                     android:text="@string/action_choose_apk" />
 
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/installHint"
+                    style="@style/Hint"
+                    android:text="@string/install_hint_no_apk" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/installButton"
                     style="@style/Action"
                     android:text="@string/action_install" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tools: secondary actions, collapsed by default. -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/listPackagesButton"
-                    style="@style/ActionOutlined"
-                    android:text="@string/action_list_packages" />
+                    android:id="@+id/toolsToggle"
+                    style="@style/ToggleText"
+                    android:text="@string/card_tools_title" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Field"
-                    android:layout_marginTop="12dp"
-                    android:hint="@string/hint_uninstall_package">
+                <LinearLayout
+                    android:id="@+id/toolsGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/uninstallPackage"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/listPackagesButton"
+                        style="@style/ActionOutlined"
+                        android:text="@string/action_list_packages" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/uninstallButton"
-                    style="@style/ActionOutlined"
-                    android:text="@string/action_uninstall" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Field"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_uninstall_package">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/uninstallPackage"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/uninstallButton"
+                        style="@style/ActionOutlined"
+                        android:text="@string/action_uninstall" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

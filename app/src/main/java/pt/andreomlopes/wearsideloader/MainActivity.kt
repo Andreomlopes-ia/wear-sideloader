@@ -14,6 +14,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
+    private var hasApk = false
+    private var currentState = MainViewModel.State.DISCONNECTED
+
     private val pickApk = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { viewModel.setApk(it) }
     }
@@ -23,19 +26,22 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.connectHost.setText(viewModel.lastHost)
-        binding.pairHost.setText(viewModel.lastHost)
+        binding.watchHost.setText(viewModel.lastHost)
         binding.connectPort.setText(viewModel.lastPort)
 
+        binding.setupHelpToggle.setOnClickListener { binding.setupHelpBody.toggleVisibility() }
+        binding.pairingToggle.setOnClickListener { binding.pairingGroup.toggleVisibility() }
+        binding.toolsToggle.setOnClickListener { binding.toolsGroup.toggleVisibility() }
+
         binding.pairButton.setOnClickListener {
-            val host = binding.pairHost.required(getString(R.string.hint_pair_host)) ?: return@setOnClickListener
+            val host = binding.watchHost.required(getString(R.string.hint_watch_host)) ?: return@setOnClickListener
             val port = binding.pairPort.port() ?: return@setOnClickListener
             val code = binding.pairCode.required(getString(R.string.hint_pair_code)) ?: return@setOnClickListener
             viewModel.pair(host, port, code)
         }
 
         binding.connectButton.setOnClickListener {
-            val host = binding.connectHost.required(getString(R.string.hint_connect_host)) ?: return@setOnClickListener
+            val host = binding.watchHost.required(getString(R.string.hint_watch_host)) ?: return@setOnClickListener
             val port = binding.connectPort.port() ?: return@setOnClickListener
             viewModel.connect(host, port)
         }
@@ -52,7 +58,11 @@ class MainActivity : AppCompatActivity() {
         }
         binding.clearLogButton.setOnClickListener { viewModel.clearLog() }
 
-        viewModel.state.observe(this) { render(it) }
+        viewModel.state.observe(this) { state ->
+            currentState = state
+            render(state)
+            updateInstallHint()
+        }
         viewModel.log.observe(this) { text ->
             binding.logView.text = text
             if (text.isEmpty()) return@observe
@@ -61,7 +71,10 @@ class MainActivity : AppCompatActivity() {
             binding.logScroll.post { binding.logScroll.scrollTo(0, binding.logView.bottom) }
         }
         viewModel.apkLabel.observe(this) {
+            hasApk = it != null
             binding.apkLabel.text = it ?: getString(R.string.no_apk_selected)
+            render(currentState)
+            updateInstallHint()
         }
     }
 
@@ -79,13 +92,31 @@ class MainActivity : AppCompatActivity() {
         binding.progress.visibility = if (busy) View.VISIBLE else View.INVISIBLE
 
         binding.pairButton.isEnabled = !busy
-        binding.connectButton.isEnabled = !busy && !connected
-        binding.autoConnectButton.isEnabled = !busy && !connected
-        binding.disconnectButton.isEnabled = connected
+        binding.connectButton.isEnabled = !busy
+        binding.autoConnectButton.isEnabled = !busy
+        binding.disconnectButton.isEnabled = connected && !busy
         binding.chooseApkButton.isEnabled = !busy
-        binding.installButton.isEnabled = connected
-        binding.listPackagesButton.isEnabled = connected
-        binding.uninstallButton.isEnabled = connected
+        // Install/List/Uninstall no longer gate on "connected": they reconnect on their own
+        // (MainViewModel.ensureConnected), so the only real precondition to check here is
+        // whether there is something to act on, plus not already mid-command.
+        binding.installButton.isEnabled = !busy && hasApk
+        binding.listPackagesButton.isEnabled = !busy
+        binding.uninstallButton.isEnabled = !busy
+    }
+
+    /** Keeps the reason for Install's state visible instead of just greying it out silently. */
+    private fun updateInstallHint() {
+        val target = viewModel.watchTarget
+        binding.installHint.text = when {
+            !hasApk -> getString(R.string.install_hint_no_apk)
+            currentState == MainViewModel.State.CONNECTED -> getString(R.string.install_hint_ready, target)
+            target.isNotEmpty() -> getString(R.string.install_hint_will_reconnect, target)
+            else -> getString(R.string.install_hint_no_target)
+        }
+    }
+
+    private fun View.toggleVisibility() {
+        visibility = if (visibility == View.VISIBLE) View.GONE else View.VISIBLE
     }
 
     private fun EditText.required(label: String): String? {

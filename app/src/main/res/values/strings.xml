@@ -5,26 +5,32 @@
     <string name="status_busy">Working…</string>
     <string name="status_connected">Connected</string>
 
-    <string name="step_prepare">1. Prepare the watch</string>
+    <string name="card_watch_title">Watch</string>
+    <string name="action_setup_help">How do I enable this on my watch?</string>
     <string name="prepare_instructions">On the watch: Settings › Developer options › turn on <b>ADB debugging</b>, then turn on <b>Wireless debugging</b>. Tap <b>Pair new device</b> and note the IP address, port and 6-digit code.\n\nThe watch and this phone must be on the same Wi-Fi network, and the watch screen must stay awake while pairing. The pairing port and the connection port are different, and both change every time Wireless debugging is toggled.</string>
 
-    <string name="step_pair">2. Pair (first time only)</string>
-    <string name="hint_pair_host">Watch IP address</string>
-    <string name="hint_pair_port">Pairing port</string>
-    <string name="hint_pair_code">6-digit pairing code</string>
-    <string name="action_pair">Pair</string>
-
-    <string name="step_connect">3. Connect</string>
-    <string name="hint_connect_host">Watch IP address</string>
+    <string name="hint_watch_host">Watch IP address</string>
     <string name="hint_connect_port">Connection port</string>
     <string name="action_connect">Connect</string>
     <string name="action_auto_connect">Find watch automatically</string>
     <string name="action_disconnect">Disconnect</string>
 
-    <string name="step_install">4. Install an APK</string>
+    <string name="action_pairing_toggle">Not paired yet? Tap to pair</string>
+    <string name="hint_pair_port">Pairing port</string>
+    <string name="hint_pair_code">6-digit pairing code</string>
+    <string name="action_pair">Pair</string>
+
+    <string name="card_install_title">Install</string>
     <string name="no_apk_selected">No APK selected</string>
     <string name="action_choose_apk">Choose APK…</string>
     <string name="action_install">Install on watch</string>
+
+    <string name="install_hint_no_apk">Choose an APK to enable installing.</string>
+    <string name="install_hint_ready">Will install to %1$s.</string>
+    <string name="install_hint_will_reconnect">Not connected — will reconnect to %1$s first, then install.</string>
+    <string name="install_hint_no_target">Not connected, and no watch saved yet. Connect or pair above first.</string>
+
+    <string name="card_tools_title">Tools (list / uninstall)</string>
     <string name="action_list_packages">List installed apps</string>
     <string name="hint_uninstall_package">Package name to remove</string>
     <string name="action_uninstall">Uninstall from watch</string>

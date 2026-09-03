@@ -47,4 +47,20 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">4dp</item>
     </style>
+
+    <!-- Left-aligned text button used as a tap target for disclosure toggles (setup help,
+         pairing, tools) so they read as expandable sections rather than as primary actions. -->
+    <style name="ToggleText" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:gravity">start|center_vertical</item>
+    </style>
+
+    <style name="Hint" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
 </resources>

@@ -1,5 +1,6 @@
 package pt.andreomlopes.wearsideloader
 
+import android.util.Log
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
 import java.io.InputStream
 
@@ -8,11 +9,29 @@ import java.io.InputStream
  */
 object AdbInstaller {
 
-    /** Runs a one-shot command and returns its combined output. */
-    fun shell(manager: AbsAdbConnectionManager, command: String): String =
-        manager.openStream("shell:$command").use { stream ->
-            stream.openInputStream().bufferedReader().readText().trim()
+    private const val TAG = "AdbInstaller"
+
+    /**
+     * Runs a one-shot command and returns its combined output.
+     *
+     * Whether `shell:` actually carries stream data to a given watch is unverified — the only
+     * environment available while building this never let it be tested end to end. If `shell:`
+     * comes back empty, this retries once over `exec:` (which avoids the pty a shell stream runs
+     * through) and logs which transport actually produced output, so the next real run settles it.
+     */
+    fun shell(manager: AbsAdbConnectionManager, command: String): String {
+        val (primary, primaryMs) = timed { openAndRead(manager, "shell:$command") }
+        if (primary.isNotEmpty()) {
+            Log.d(TAG, "shell '$command' -> shell: (${primaryMs}ms, ${primary.length} chars)")
+            return primary
         }
+        val (fallback, fallbackMs) = timed { openAndRead(manager, "exec:$command") }
+        Log.d(
+            TAG,
+            "shell '$command' -> shell: empty (${primaryMs}ms), exec: (${fallbackMs}ms, ${fallback.length} chars)"
+        )
+        return fallback
+    }
 
     /**
      * Streams an APK straight into the package manager's stdin, the way `adb install` does.
@@ -30,13 +49,16 @@ object AdbInstaller {
         extraArgs: String = "-r -t"
     ): InstallResult {
         val service = "exec:cmd package install $extraArgs -S $size"
-        val output = manager.openStream(service).use { stream ->
-            stream.openOutputStream().use { out ->
-                apk.copyTo(out, DEFAULT_BUFFER_SIZE)
-                out.flush()
+        val (output, ms) = timed {
+            manager.openStream(service).use { stream ->
+                stream.openOutputStream().use { out ->
+                    apk.copyTo(out, DEFAULT_BUFFER_SIZE)
+                    out.flush()
+                }
+                stream.openInputStream().bufferedReader().readText().trim()
             }
-            stream.openInputStream().bufferedReader().readText().trim()
         }
+        Log.d(TAG, "install $size bytes in ${ms}ms: $output")
         return InstallResult(output.startsWith("Success"), output.ifEmpty { "No response from device" })
     }
 
@@ -67,6 +89,17 @@ object AdbInstaller {
     }
 
     data class InstallResult(val success: Boolean, val message: String)
+
+    private fun openAndRead(manager: AbsAdbConnectionManager, service: String): String =
+        manager.openStream(service).use { stream ->
+            stream.openInputStream().bufferedReader().readText().trim()
+        }
+
+    private inline fun <T> timed(block: () -> T): Pair<T, Long> {
+        val start = System.currentTimeMillis()
+        val result = block()
+        return result to (System.currentTimeMillis() - start)
+    }
 
     private const val DEFAULT_BUFFER_SIZE = 64 * 1024
 }
