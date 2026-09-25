@@ -88,6 +88,25 @@ object AdbInstaller {
         return "$model (Android $release, API $sdk)"
     }
 
+    /** PNG bytes of the watch's current screen. Throws with the watch's own error text otherwise. */
+    fun screenshot(manager: AbsAdbConnectionManager): ByteArray {
+        val (bytes, ms) = timed {
+            manager.openStream("exec:screencap -p").use { stream ->
+                stream.openInputStream().use { it.readBytes() }
+            }
+        }
+        Log.d(TAG, "screencap ${bytes.size} bytes in ${ms}ms")
+        if (!bytes.startsWith(PNG_SIGNATURE)) {
+            error(bytes.toString(Charsets.US_ASCII).trim().take(200).ifEmpty { "No image returned" })
+        }
+        return bytes
+    }
+
+    private fun ByteArray.startsWith(prefix: ByteArray): Boolean =
+        size >= prefix.size && prefix.indices.all { this[it] == prefix[it] }
+
+    private val PNG_SIGNATURE = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
+
     data class InstallResult(val success: Boolean, val message: String)
 
     private fun openAndRead(manager: AbsAdbConnectionManager, service: String): String =

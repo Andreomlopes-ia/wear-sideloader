@@ -9,6 +9,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.github.muntashirakon.adb.AdbAuthenticationFailedException
 import io.github.muntashirakon.adb.AdbPairingRequiredException
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
@@ -33,6 +37,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val apkLabel: LiveData<String?> = _apkLabel
 
     private var apkUri: Uri? = null
+
+    private val _screenshot = MutableLiveData<File?>(null)
+    val screenshot: LiveData<File?> = _screenshot
 
     val lastHost: String get() = prefs.getString(KEY_HOST, "") ?: ""
     val lastPort: String get() = prefs.getString(KEY_PORT, "") ?: ""
@@ -128,6 +135,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (!ensureConnected(manager)) return@runAdb
         val result = AdbInstaller.uninstall(manager, packageName)
         append(if (result.success) "Uninstalled $packageName." else "Uninstall failed: ${result.message}")
+    }
+
+    fun takeScreenshot() = runAdb("Taking a screenshot of the watch", SCREENSHOT_TIMEOUT_SECONDS) { manager ->
+        if (!ensureConnected(manager)) return@runAdb
+        val bytes = AdbInstaller.screenshot(manager)
+        val dir = File(getApplication<Application>().cacheDir, SCREENSHOT_DIR).apply { mkdirs() }
+        // Share-only by design: keep just the latest capture so the cache doesn't grow.
+        dir.listFiles()?.forEach { it.delete() }
+        val stamp = SimpleDateFormat("yyyy-MM-dd-HHmmss", Locale.US).format(Date())
+        val file = File(dir, "watch-$stamp.png").apply { writeBytes(bytes) }
+        _screenshot.postValue(file)
+        append("Screenshot captured (${bytes.size / 1024} KB).")
     }
 
     fun disconnect() = runAdb("Disconnecting") { manager ->
@@ -268,5 +287,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private const val DEFAULT_TIMEOUT_SECONDS = 15L
         // Streaming a large APK to a watch over Wi-Fi is legitimately slow.
         private const val INSTALL_TIMEOUT_SECONDS = 600L
+        private const val SCREENSHOT_TIMEOUT_SECONDS = 30L
+        const val SCREENSHOT_DIR = "screenshots"
     }
 }

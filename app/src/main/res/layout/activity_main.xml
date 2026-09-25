@@ -162,6 +162,39 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout style="@style/SectionBody">
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/SectionTitle"
+                    android:text="@string/card_screenshot_title" />
+
+                <ImageView
+                    android:id="@+id/screenshotPreview"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="8dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/screenshot_preview_description"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/screenshotButton"
+                    style="@style/Action"
+                    android:text="@string/action_take_screenshot" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/shareScreenshotButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_share_screenshot"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Tools: secondary actions, collapsed by default. -->
         <com.google.android.material.card.MaterialCardView
             style="@style/SectionCard">

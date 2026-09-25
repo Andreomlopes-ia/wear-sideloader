@@ -11,8 +11,8 @@ android {
         applicationId "pt.andreomlopes.wearsideloader"
         minSdk 24
         targetSdk 33
-        versionCode 20
-        versionName "0.2.0"
+        versionCode 30
+        versionName "0.3.0"
     }
 
     buildTypes {

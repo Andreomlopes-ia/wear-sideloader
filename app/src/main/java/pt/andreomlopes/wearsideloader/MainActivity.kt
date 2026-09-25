@@ -1,11 +1,15 @@
 package pt.andreomlopes.wearsideloader
 
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import java.io.File
 import pt.andreomlopes.wearsideloader.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -57,6 +61,17 @@ class MainActivity : AppCompatActivity() {
             viewModel.uninstall(pkg)
         }
         binding.clearLogButton.setOnClickListener { viewModel.clearLog() }
+        binding.screenshotButton.setOnClickListener { viewModel.takeScreenshot() }
+        binding.shareScreenshotButton.setOnClickListener {
+            viewModel.screenshot.value?.let { shareScreenshot(it) }
+        }
+
+        viewModel.screenshot.observe(this) { file ->
+            val shown = file != null && file.exists()
+            binding.screenshotPreview.visibility = if (shown) View.VISIBLE else View.GONE
+            binding.shareScreenshotButton.visibility = if (shown) View.VISIBLE else View.GONE
+            if (shown) binding.screenshotPreview.setImageBitmap(BitmapFactory.decodeFile(file!!.path))
+        }
 
         viewModel.state.observe(this) { state ->
             currentState = state
@@ -102,6 +117,16 @@ class MainActivity : AppCompatActivity() {
         binding.installButton.isEnabled = !busy && hasApk
         binding.listPackagesButton.isEnabled = !busy
         binding.uninstallButton.isEnabled = !busy
+        binding.screenshotButton.isEnabled = !busy
+    }
+
+    private fun shareScreenshot(file: File) {
+        val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("image/png")
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(send, getString(R.string.share_screenshot_chooser)))
     }
 
     /** Keeps the reason for Install's state visible instead of just greying it out silently. */
