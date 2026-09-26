@@ -33,6 +33,8 @@
     <string name="card_screenshot_title">Watch screen</string>
     <string name="action_take_screenshot">Take screenshot</string>
     <string name="action_share_screenshot">Share screenshot</string>
+    <string name="action_save_screenshot">Save to Gallery</string>
+    <string name="action_save_screenshot_unsupported">Save to Gallery (needs Android 10+)</string>
     <string name="screenshot_preview_description">Latest watch screenshot</string>
     <string name="share_screenshot_chooser">Share watch screenshot</string>
 

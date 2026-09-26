@@ -2,6 +2,7 @@ package pt.andreomlopes.wearsideloader
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
@@ -66,9 +67,17 @@ class MainActivity : AppCompatActivity() {
             viewModel.screenshot.value?.let { shareScreenshot(it) }
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            binding.saveScreenshotButton.setOnClickListener { viewModel.saveScreenshotToGallery() }
+        } else {
+            binding.saveScreenshotButton.isEnabled = false
+            binding.saveScreenshotButton.setText(R.string.action_save_screenshot_unsupported)
+        }
+
         viewModel.screenshot.observe(this) { file ->
             val shown = file != null && file.exists()
             binding.screenshotPreview.visibility = if (shown) View.VISIBLE else View.GONE
+            binding.saveScreenshotButton.visibility = if (shown) View.VISIBLE else View.GONE
             binding.shareScreenshotButton.visibility = if (shown) View.VISIBLE else View.GONE
             if (shown) binding.screenshotPreview.setImageBitmap(BitmapFactory.decodeFile(file!!.path))
         }

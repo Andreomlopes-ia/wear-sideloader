@@ -188,6 +188,12 @@
                     android:text="@string/action_take_screenshot" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/saveScreenshotButton"
+                    style="@style/ActionOutlined"
+                    android:text="@string/action_save_screenshot"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/shareScreenshotButton"
                     style="@style/ActionOutlined"
                     android:text="@string/action_share_screenshot"

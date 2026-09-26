@@ -1,9 +1,14 @@
 package pt.andreomlopes.wearsideloader
 
 import android.app.Application
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.OpenableColumns
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -149,6 +154,36 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         append("Screenshot captured (${bytes.size / 1024} KB).")
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun saveScreenshotToGallery() {
+        val file = _screenshot.value ?: return
+        executor.execute {
+            val resolver = getApplication<Application>().contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, file.name)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$GALLERY_ALBUM")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            if (uri == null) {
+                append("Could not create an entry in the Gallery.")
+                return@execute
+            }
+            runCatching {
+                resolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }
+                values.clear()
+                values.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+            }.onSuccess {
+                append("Saved to Gallery: Pictures/$GALLERY_ALBUM/${file.name}")
+            }.onFailure {
+                resolver.delete(uri, null, null)
+                append("Saving to Gallery failed: ${it.message}")
+            }
+        }
+    }
+
     fun disconnect() = runAdb("Disconnecting") { manager ->
         manager.disconnect()
         append("Disconnected.")
@@ -289,5 +324,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private const val INSTALL_TIMEOUT_SECONDS = 600L
         private const val SCREENSHOT_TIMEOUT_SECONDS = 30L
         const val SCREENSHOT_DIR = "screenshots"
+        private const val GALLERY_ALBUM = "WearSideloader"
     }
 }
