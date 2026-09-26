@@ -2,6 +2,9 @@ package pt.andreomlopes.wearsideloader
 
 import android.util.Log
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
+import io.github.muntashirakon.adb.AdbStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 
 /**
@@ -55,7 +58,7 @@ object AdbInstaller {
                     apk.copyTo(out, DEFAULT_BUFFER_SIZE)
                     out.flush()
                 }
-                stream.openInputStream().bufferedReader().readText().trim()
+                readToEnd(stream).toString(Charsets.UTF_8).trim()
             }
         }
         Log.d(TAG, "install $size bytes in ${ms}ms: $output")
@@ -91,19 +94,45 @@ object AdbInstaller {
     /** PNG bytes of the watch's current screen. Throws with the watch's own error text otherwise. */
     fun screenshot(manager: AbsAdbConnectionManager): ByteArray {
         val (bytes, ms) = timed {
-            manager.openStream("exec:screencap -p").use { stream ->
-                stream.openInputStream().use { it.readBytes() }
-            }
+            manager.openStream("exec:screencap -p").use { readToEnd(it) }
         }
         Log.d(TAG, "screencap ${bytes.size} bytes in ${ms}ms")
         if (!bytes.startsWith(PNG_SIGNATURE)) {
             error(bytes.toString(Charsets.US_ASCII).trim().take(200).ifEmpty { "No image returned" })
         }
+        // readToEnd can't tell a finished stream from a dropped one, so check the PNG's own end marker.
+        if (!bytes.hasPngEnd()) error("Screenshot was cut off after ${bytes.size} bytes. Try again.")
         return bytes
+    }
+
+    /**
+     * libadb-android signals end-of-stream by throwing IOException("Stream closed.") instead of
+     * returning -1 whenever the reader drained the queue before the peer's close arrived — which
+     * is the normal case for any output bigger than a packet or two. The data already read is
+     * complete; only that final read is wrong.
+     */
+    private fun readToEnd(stream: AdbStream): ByteArray {
+        val out = ByteArrayOutputStream()
+        val input = stream.openInputStream()
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val n = try {
+                input.read(buffer)
+            } catch (e: IOException) {
+                if (e.message?.startsWith("Stream closed") == true) -1 else throw e
+            }
+            if (n < 0) break
+            out.write(buffer, 0, n)
+        }
+        return out.toByteArray()
     }
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean =
         size >= prefix.size && prefix.indices.all { this[it] == prefix[it] }
+
+    /** A complete PNG ends with an IEND chunk: the type "IEND" followed by its 4-byte CRC. */
+    private fun ByteArray.hasPngEnd(): Boolean =
+        size >= 12 && String(this, size - 8, 4, Charsets.US_ASCII) == "IEND"
 
     private val PNG_SIGNATURE = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
 
@@ -111,7 +140,7 @@ object AdbInstaller {
 
     private fun openAndRead(manager: AbsAdbConnectionManager, service: String): String =
         manager.openStream(service).use { stream ->
-            stream.openInputStream().bufferedReader().readText().trim()
+            readToEnd(stream).toString(Charsets.UTF_8).trim()
         }
 
     private inline fun <T> timed(block: () -> T): Pair<T, Long> {
