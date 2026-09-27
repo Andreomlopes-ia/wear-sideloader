@@ -43,6 +43,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var apkUri: Uri? = null
 
+    private val _discovered = MutableLiveData<List<WatchFinder.Found>?>(null)
+    val discovered: LiveData<List<WatchFinder.Found>?> = _discovered
+
+    private val _connectedTarget = MutableLiveData<WatchFinder.Found?>(null)
+    val connectedTarget: LiveData<WatchFinder.Found?> = _connectedTarget
+
     private val _screenshot = MutableLiveData<File?>(null)
     val screenshot: LiveData<File?> = _screenshot
 
@@ -94,13 +100,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun autoConnect() = runAdb("Searching the network for a paired device") { manager ->
-        if (manager.autoConnect(getApplication(), DISCOVERY_TIMEOUT_MS)) {
-            manager.hostAddress.takeIf { it.isNotEmpty() }
-                ?.let { prefs.edit().putString(KEY_HOST, it).apply() }
+    fun autoConnect() = runAdb("Searching the network for a watch", AUTO_CONNECT_TIMEOUT_SECONDS) { manager ->
+        val saved = lastHost.ifEmpty { null }
+        val found = WatchFinder(getApplication()).find(DISCOVERY_TIMEOUT_MS, saved)
+        val pick = found.firstOrNull { it.host == saved } ?: found.singleOrNull()
+        when {
+            found.isEmpty() -> append(
+                "No watch found. Check Wireless debugging is on and the watch is awake on the same Wi-Fi. " +
+                    "Some routers block device discovery — manual IP and port still work."
+            )
+            pick == null -> {
+                append("Found ${found.size} devices — choose one.")
+                _discovered.postValue(found)
+            }
+            else -> connectTo(manager, pick)
+        }
+    }
+
+    fun connectToFound(target: WatchFinder.Found) = runAdb("Connecting to ${target.name}") { manager ->
+        connectTo(manager, target)
+    }
+
+    fun consumeDiscovered() = _discovered.postValue(null)
+
+    private fun connectTo(manager: AdbManager, target: WatchFinder.Found) {
+        append("Found ${target.name} at ${target.host}:${target.port}.")
+        if (manager.connect(target.host, target.port)) {
+            prefs.edit().putString(KEY_HOST, target.host).putString(KEY_PORT, target.port.toString()).apply()
+            _connectedTarget.postValue(target)
             announceConnected(manager)
         } else {
-            append("No device found. Enter the IP and port manually.")
+            append("Connection refused. If this watch hasn't been paired with this phone yet, pair it first.")
         }
     }
 
@@ -318,7 +348,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private const val KEY_HOST = "host"
         private const val KEY_PORT = "port"
         private const val KEY_APK_URI = "apk_uri"
-        private const val DISCOVERY_TIMEOUT_MS = 10_000L
+        private const val DISCOVERY_TIMEOUT_MS = 6_000L
+        private const val AUTO_CONNECT_TIMEOUT_SECONDS = 25L
         private const val DEFAULT_TIMEOUT_SECONDS = 15L
         // Streaming a large APK to a watch over Wi-Fi is legitimately slow.
         private const val INSTALL_TIMEOUT_SECONDS = 600L

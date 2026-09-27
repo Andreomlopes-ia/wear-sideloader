@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import java.io.File
 import pt.andreomlopes.wearsideloader.databinding.ActivityMainBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
@@ -72,6 +73,23 @@ class MainActivity : AppCompatActivity() {
         } else {
             binding.saveScreenshotButton.isEnabled = false
             binding.saveScreenshotButton.setText(R.string.action_save_screenshot_unsupported)
+        }
+
+        viewModel.connectedTarget.observe(this) { target ->
+            target ?: return@observe
+            binding.watchHost.setText(target.host)
+            binding.connectPort.setText(target.port.toString())
+        }
+        viewModel.discovered.observe(this) { found ->
+            if (found.isNullOrEmpty()) return@observe
+            viewModel.consumeDiscovered()
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.choose_watch_title)
+                .setItems(found.map { "${it.name}\n${it.host}:${it.port}" }.toTypedArray()) { _, which ->
+                    viewModel.connectToFound(found[which])
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
         }
 
         viewModel.screenshot.observe(this) { file ->
